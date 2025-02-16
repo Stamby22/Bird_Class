@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bird classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #00000070;
+            backdrop-filter: blur(4px);
+            min-height: 100vh;
+            background-blend-mode: overlay;
+            background-size: cover;
+            background-position: center top;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+        
+        .upload-form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .upload-form input[type="file"] {
+            margin-bottom: 10px;
+        }
+        
+        .upload-form button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .result-container {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .result-container h2 {
+            color: #333;
+        }
+        
+        .result-class {
+            font-weight: bold;
+        }
+        
+        .result-confidence {
+            margin-top: 20px;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <meta charset="UTF-8">
+    <h1>Urceni druhu</h1>
+    <div class="upload-form">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" id="fileInput" accept="image/*">
+            <img id="imagePreview" style="display: none;" alt="Image preview">
+            <button type="submit" id="submitButton">Urcit</button>
+        </form>
+    </div>
+
+    <div class="result-container" id="resultContainer" style="display: none;">
+        <h2>Vysledek</h2>
+        <p class="result-class" id="resultClass"></p>
+        <p class="result-confidence" id="resultConfidence"></p>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            submitForm();
+        });
+
+        document.getElementById("fileInput").addEventListener("change", function (event) {
+            var file = event.target.files[0];
+            var imagePreview = document.getElementById("imagePreview");
+            
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = "block";
+                    document.getElementById('resultContainer').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = "none";
+            }
+        });
+
+        function submitForm() {
+            var form = document.getElementById("uploadForm");
+            var fileInput = document.getElementById("fileInput");
+            var resultContainer = document.getElementById("resultContainer");
+            var resultClass = document.getElementById("resultClass");
+            var resultConfidence = document.getElementById("resultConfidence");
+            resultContainer.style.display = "none";
+
+            var formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/predict", true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    resultClass.innerText = "Druh: " + response.class;
+                    resultConfidence.innerText = "P\u0159esnost: " + response.confidence;
+                    resultContainer.style.display = "block";
+                } else {
+                    alert("Error: " + xhr.status);
+                }
+            };
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
