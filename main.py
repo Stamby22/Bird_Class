@@ -10,6 +10,7 @@ from tensorflow.keras.utils import img_to_array
 from numpy import expand_dims, argmax
 from json import load
 import os
+import requests
 
 app = FastAPI()
 IMG_SIZE = 300
@@ -26,15 +27,22 @@ app.add_middleware(
 
 # Loading the classes from the JSON file
 current_working_directory = os.getcwd()
-bird_classes_filepath = os.path.join(current_working_directory,"Models","bird_classes.json")
+bird_classes_filepath = os.path.join(current_working_directory,"bird_classes.json")
 with open(bird_classes_filepath, 'r') as json_file:
     bird_classes = load(json_file)
 # create invert dictionary
 bird_species = {v: k for k, v in bird_classes.items()}
 
 # load trained model
-best_model_file_name = os.path.join(current_working_directory,"Models","Bird_EffiB3_04_FT.h5")
-MODEL = load_model(best_model_file_name)           
+url = 'https://github.com/Stamby22/Bird_Class/releases/download/v0.1/Bird_Class_model.h5' 
+local_filename = os.path.join(current_working_directory, 'model.h5')  # save file in working dir
+with requests.get(url, stream=True) as r:
+    r.raise_for_status()
+    with open(local_filename, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+model_file_name = os.path.join(current_working_directory,"model.h5")
+MODEL = load_model(model_file_name)           
 
 # get probabilities of the best predictions
 def get_probabilities(prob_list, trashold):
